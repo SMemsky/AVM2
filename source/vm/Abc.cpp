@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <limits>
+#include <stdexcept>
 
 static_assert(std::numeric_limits<double>::has_quiet_NaN == true, "Fixme");
 
