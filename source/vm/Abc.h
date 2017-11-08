@@ -1,6 +1,7 @@
 #pragma once
 
 #include "common/ByteBuffer.h"
+#include "vm/Multiname.h"
 
 namespace vm
 {
@@ -28,26 +29,21 @@ class AbcConstantPool
 public:
 	AbcConstantPool() = default;
 
-	uint32_t getIntCount() const { return integers.size(); };
-	std::vector<int32_t> const & getIntegers() const { return integers; };
-
-	uint32_t getUintCount() const { return uintegers.size(); };
-	std::vector<uint32_t> const & getUintegers() const { return uintegers; };
-
-	uint32_t getDoubleCount() const { return doubles.size(); };
+	std::vector<int32_t> const & getInts() const { return ints; };
+	std::vector<uint32_t> const & getUints() const { return uints; };
 	std::vector<double> const & getDoubles() const { return doubles; };
-
-	uint32_t getStringCount() const { return strings.size(); };
 	std::vector<std::string> const & getStrings() const { return strings; };
-
-	uint32_t getNamespaceCount() const { return namespaces.size(); };
 	std::vector<Namespace> const & getNamespaces() const { return namespaces; };
+	std::vector<std::vector<uint32_t>> const & getNsSets() const { return nsSets; };
+	std::vector<MultinameInfo> const & getMultinames() const { return multinames; };
 private:
-	std::vector<int32_t> integers;
-	std::vector<uint32_t> uintegers;
+	std::vector<int32_t> ints;
+	std::vector<uint32_t> uints;
 	std::vector<double> doubles;
 	std::vector<std::string> strings;
 	std::vector<Namespace> namespaces;
+	std::vector<std::vector<uint32_t>> nsSets;
+	std::vector<MultinameInfo> multinames;
 };
 
 class Abc
