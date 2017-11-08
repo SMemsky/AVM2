@@ -32,8 +32,9 @@ int main(int argc, char * argv[])
 	std::cout << abc.getConstantPool().getUintCount() << " uintegers" << std::endl;
 	std::cout << abc.getConstantPool().getDoubleCount() << " doubles" << std::endl;
 	std::cout << abc.getConstantPool().getStringCount() << " strings" << std::endl;
-	// for (unsigned i = 0; i < abc.getConstantPool().getStringCount(); ++i) {
-	// 	std::cout << abc.getConstantPool().getStrings()[i] << std::endl;
+	std::cout << abc.getConstantPool().getNamespaceCount() << " namespaces" << std::endl;
+	// for (unsigned i = 1; i < abc.getConstantPool().getNamespaceCount(); ++i) {
+	// 	std::cout << abc.getConstantPool().getStrings()[abc.getConstantPool().getNamespaces()[i].second] << std::endl;
 	// }
 
 	std::cout << buffer.bytesLeft() << std::endl;

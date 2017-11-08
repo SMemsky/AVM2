@@ -8,6 +8,7 @@ int32_t const defaultIntegerConstant = 0;
 uint32_t const defaultUintegerConstant = 0;
 double const defaultDoubleConstant = std::numeric_limits<double>::quiet_NaN();
 std::string const defaultStringConstant = "";
+vm::Namespace const defaultNamespaceConstant = {vm::NamespaceKind::Any, 0};
 
 namespace vm
 {
@@ -38,6 +39,13 @@ AbcConstantPool loadConstantPool(ByteBuffer & buffer)
 	pool.strings.push_back(defaultStringConstant);
 	for (unsigned i = 1; i < stringCount; ++i) {
 		pool.strings.push_back(buffer.readString(buffer.readUint30()));
+	}
+
+	unsigned const namespaceCount = buffer.readUint30();
+	pool.namespaces.push_back(defaultNamespaceConstant);
+	for (unsigned i = 1; i < namespaceCount; ++i) {
+		pool.namespaces.push_back(
+			Namespace(vm::NamespaceKind(buffer.readUint8()), buffer.readUint30()));
 	}
 
 	return pool;
