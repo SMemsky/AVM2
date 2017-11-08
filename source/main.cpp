@@ -38,6 +38,10 @@ int main(int argc, char * argv[])
 	std::cout << constantPool.getNsSets().size() << " ns sets" << std::endl;
 	std::cout << constantPool.getMultinames().size() << " multinames" << std::endl;
 
+	auto const & methods = abc.getMethods();
+
+	std::cout << methods.size() << " methods" << std::endl;
+
 	std::cout << buffer.bytesLeft() << std::endl;
 
 	return 0;

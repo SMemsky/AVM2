@@ -46,6 +46,18 @@ private:
 	std::vector<MultinameInfo> multinames;
 };
 
+class MethodInfo
+{
+	friend MethodInfo loadMethodInfo(ByteBuffer &);
+public:
+	MethodInfo() = default;
+private:
+	std::vector<uint32_t> params;
+	uint32_t returnType;
+	uint32_t name;
+	uint8_t flags;
+};
+
 class Abc
 {
 	friend Abc loadAbc(ByteBuffer &);
@@ -55,11 +67,13 @@ public:
 	uint16_t getMinorVersion() const { return minorVersion; };
 	uint16_t getMajorVersion() const { return majorVersion; };
 	AbcConstantPool const & getConstantPool() const { return constantPool; };
+	std::vector<MethodInfo> const & getMethods() const { return methods; };
 private:
 	uint16_t minorVersion;
 	uint16_t majorVersion;
 
 	AbcConstantPool constantPool;
+	std::vector<MethodInfo> methods;
 };
 
 } // namespace vm

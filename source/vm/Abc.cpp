@@ -114,12 +114,30 @@ AbcConstantPool loadConstantPool(ByteBuffer & buffer)
 	return pool;
 }
 
+MethodInfo loadMethodInfo(ByteBuffer & buffer)
+{
+	MethodInfo method = MethodInfo();
+	unsigned const paramCount = buffer.readUint30();
+	method.returnType = buffer.readUint30();
+	for (unsigned i = 0; i < paramCount; ++i) {
+		method.params.push_back(buffer.readUint30());
+	}
+	method.name = buffer.readUint30();
+	method.flags = buffer.readUint8();
+
+	return method;
+}
+
 Abc loadAbc(ByteBuffer & buffer)
 {
 	Abc abc = Abc();
 	abc.minorVersion = buffer.readUint16();
 	abc.majorVersion = buffer.readUint16();
 	abc.constantPool = loadConstantPool(buffer);
+	unsigned const methodCount = buffer.readUint30();
+	for (unsigned i = 0; i < methodCount; ++i) {
+		abc.methods.push_back(loadMethodInfo(buffer));
+	}
 
 	return abc;
 }
