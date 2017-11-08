@@ -22,6 +22,13 @@ uint16_t ByteBuffer::readUint16()
 	return value;
 }
 
+int32_t ByteBuffer::readInt24()
+{
+	int32_t value = 0;
+	read(&value, 3);
+	return value;
+}
+
 uint32_t ByteBuffer::readUint30()
 {
 	uint32_t value = 0;

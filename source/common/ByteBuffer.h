@@ -12,6 +12,7 @@ public:
 
 	uint8_t readUint8();
 	uint16_t readUint16();
+	int32_t readInt24();
 	uint32_t readUint30();
 	uint32_t readUint32();
 	int32_t readInt32();
