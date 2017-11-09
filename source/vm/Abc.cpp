@@ -3,6 +3,7 @@
 #include <cassert>
 #include <limits>
 #include <stdexcept>
+#include <iostream>
 
 static_assert(std::numeric_limits<double>::has_quiet_NaN == true, "Fixme");
 
@@ -22,7 +23,7 @@ MultinameInfo loadMultiname(ByteBuffer & buffer)
 	unsigned paramCount = 0;
 
 	MultinameInfo multiname;
-	multiname.kind = MultinameKind(buffer.readUint30());
+	multiname.kind = MultinameKind(buffer.readUint8());
 	switch (multiname.kind) {
 	case MultinameKind::QName:
 	case MultinameKind::QNameA:
@@ -93,7 +94,7 @@ AbcConstantPool loadConstantPool(ByteBuffer & buffer)
 	pool.namespaces.push_back(defaultNamespaceConstant);
 	for (unsigned i = 1; i < namespaceCount; ++i) {
 		pool.namespaces.push_back(
-			Namespace(vm::NamespaceKind(buffer.readUint8()), buffer.readUint30()));
+			Namespace(NamespaceKind(buffer.readUint8()), buffer.readUint30()));
 	}
 
 	unsigned const nsSetCount = buffer.readUint30();
@@ -126,7 +127,154 @@ MethodInfo loadMethodInfo(ByteBuffer & buffer)
 	method.name = buffer.readUint30();
 	method.flags = buffer.readUint8();
 
+	if (method.flags & uint8_t(MethodFlags::HasOptional)) {
+		unsigned const optionCount = buffer.readUint30();
+		for (unsigned i = 0; i < optionCount; ++i) {
+			method.options.push_back(
+				Option(buffer.readUint30(), OptionKind(buffer.readUint8())));
+		}
+	}
+
+	if (method.flags & uint8_t(MethodFlags::HasParamNames)) {
+		for (unsigned i = 0; i < paramCount; ++i) {
+			method.paramNames.push_back(buffer.readUint30());
+		}
+	}
+
 	return method;
+}
+
+MetadataInfo loadMetadataInfo(ByteBuffer &)
+{
+	MetadataInfo metadata = MetadataInfo();
+
+	throw std::runtime_error("loadMetadataInfo: not implemented");
+
+	return metadata;
+}
+
+TraitInfo loadTraitInfo(ByteBuffer & buffer)
+{
+	TraitInfo trait = TraitInfo();
+
+	trait.name = buffer.readUint30();
+	uint8_t kind = buffer.readUint8();
+	trait.kind = TraitKind(kind & 0xf);
+	trait.attributes = TraitAttributes(kind >> 4);
+	switch (trait.kind) {
+	case TraitKind::Slot:
+	case TraitKind::Const:
+		trait.slotTrait.slotId = buffer.readUint30();
+		trait.slotTrait.typeName = buffer.readUint30();
+		trait.slotTrait.vIndex = buffer.readUint30();
+		if (trait.slotTrait.vIndex != 0) {
+			trait.slotTrait.vKind = buffer.readUint8();
+		}
+		break;
+	case TraitKind::Class:
+		trait.classTrait.slotId = buffer.readUint30();
+		trait.classTrait.classI = buffer.readUint30();
+		break;
+	case TraitKind::Function:
+		trait.functionTrait.slotId = buffer.readUint30();
+		trait.functionTrait.function = buffer.readUint30();
+		break;
+	case TraitKind::Method:
+	case TraitKind::Getter:
+	case TraitKind::Setter:
+		trait.methodTrait.dispId = buffer.readUint30();
+		trait.methodTrait.method = buffer.readUint30();
+		break;
+	default:
+		throw std::runtime_error(
+			std::string("Unknown trait kind: ")
+			+ std::to_string(uint8_t(trait.kind)));
+	}
+
+	return trait;
+}
+
+InstanceInfo loadInstanceInfo(ByteBuffer & buffer)
+{
+	InstanceInfo instance = InstanceInfo();
+	instance.name = buffer.readUint30();
+	instance.superName = buffer.readUint30();
+	instance.flags = buffer.readUint8();
+	instance.protectedNamespace = buffer.readUint30();
+	unsigned const interfaceCount = buffer.readUint30();
+	for (unsigned i = 0; i < interfaceCount; ++i) {
+		instance.interfaces.push_back(buffer.readUint30());
+	}
+	instance.constructor = buffer.readUint30();
+	unsigned const traitCount = buffer.readUint30();
+	for (unsigned i = 0; i < traitCount; ++i) {
+		instance.traits.push_back(loadTraitInfo(buffer));
+	}
+
+	return instance;
+}
+
+ClassInfo loadClassInfo(ByteBuffer & buffer)
+{
+	ClassInfo classInfo = ClassInfo();
+	classInfo.cInit = buffer.readUint30();
+	unsigned const traitCount = buffer.readUint30();
+	for (unsigned i = 0; i < traitCount; ++i) {
+		classInfo.traits.push_back(loadTraitInfo(buffer));
+	}
+
+	return classInfo;
+}
+
+ScriptInfo loadScriptInfo(ByteBuffer & buffer)
+{
+	ScriptInfo script = ScriptInfo();
+	script.init = buffer.readUint30();
+	unsigned const traitCount = buffer.readUint30();
+	for (unsigned i = 0; i < traitCount; ++i) {
+		script.traits.push_back(loadTraitInfo(buffer));
+	}
+
+	return script;
+}
+
+ExceptionInfo loadExceptionInfo(ByteBuffer & buffer)
+{
+	ExceptionInfo exception = ExceptionInfo();
+	exception.from = buffer.readUint30();
+	exception.to = buffer.readUint30();
+	exception.target = buffer.readUint30();
+	exception.excType = buffer.readUint30();
+	exception.varName = buffer.readUint30();
+
+	return exception;
+}
+
+MethodBodyInfo loadMethodBodyInfo(ByteBuffer & buffer)
+{
+	MethodBodyInfo body = MethodBodyInfo();
+	body.method = buffer.readUint30();
+	body.maxStack = buffer.readUint30();
+	body.localCount = buffer.readUint30();
+	body.initScopeDepth = buffer.readUint30();
+	body.maxScopeDepth = buffer.readUint30();
+
+	unsigned const codeSize = buffer.readUint30();
+	for (unsigned i = 0; i < codeSize; ++i) {
+		body.code.push_back(buffer.readUint8());
+	}
+
+	unsigned const exceptionCount = buffer.readUint30();
+	for (unsigned i = 0; i < exceptionCount; ++i) {
+		body.exceptions.push_back(loadExceptionInfo(buffer));
+	}
+
+	unsigned const traitCount = buffer.readUint30();
+	for (unsigned i = 0; i < traitCount; ++i) {
+		body.traits.push_back(loadTraitInfo(buffer));
+	}
+
+	return body;
 }
 
 Abc loadAbc(ByteBuffer & buffer)
@@ -135,9 +283,33 @@ Abc loadAbc(ByteBuffer & buffer)
 	abc.minorVersion = buffer.readUint16();
 	abc.majorVersion = buffer.readUint16();
 	abc.constantPool = loadConstantPool(buffer);
+	
 	unsigned const methodCount = buffer.readUint30();
 	for (unsigned i = 0; i < methodCount; ++i) {
 		abc.methods.push_back(loadMethodInfo(buffer));
+	}
+
+	unsigned const metadataCount = buffer.readUint30();
+	for (unsigned i = 0; i < metadataCount; ++i) {
+		abc.metadata.push_back(loadMetadataInfo(buffer));
+	}
+
+	unsigned const classCount = buffer.readUint30();
+	for (unsigned i = 0; i < classCount; ++i) {
+		abc.instances.push_back(loadInstanceInfo(buffer));
+	}
+	for (unsigned i = 0; i < classCount; ++i) {
+		abc.classes.push_back(loadClassInfo(buffer));
+	}
+
+	unsigned const scriptCount = buffer.readUint30();
+	for (unsigned i = 0; i < scriptCount; ++i) {
+		abc.scripts.push_back(loadScriptInfo(buffer));
+	}
+
+	unsigned const methodBodyCount = buffer.readUint30();
+	for (unsigned i = 0; i < methodBodyCount; ++i) {
+		abc.bodies.push_back(loadMethodBodyInfo(buffer));
 	}
 
 	return abc;
