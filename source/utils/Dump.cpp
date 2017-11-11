@@ -1,5 +1,6 @@
 #include "Dump.h"
 
+#include <algorithm>
 #include <iostream>
 
 namespace
