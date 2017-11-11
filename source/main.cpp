@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <iomanip>
 
 #include "common/ByteBuffer.h"
 #include "common/FileUtil.h"
@@ -13,6 +14,40 @@ void printUsage(std::string const & program)
 		<< "  " << program << " <filename.abc>" << std::endl;
 }
 
+void printBytes(std::vector<uint8_t> const & bytes)
+{
+	std::cout << std::hex;
+	for (unsigned i = 0; i < bytes.size(); ++i) {
+		std::cout << std::setfill('0') << std::setw(2) << +bytes[i];
+		if (i % 16 == 15) {
+			std::cout << "\n";
+		} else {
+			std::cout << " ";
+		}
+	}
+	std::cout << std::dec << std::endl;
+}
+
+void printEntry(vm::Abc const & abc)
+{
+	// auto const & constantPool = abc.getConstantPool();
+	auto const & scripts = abc.getScripts();
+	if (scripts.size() == 0) {
+		std::cout << "No entry point" << std::endl;
+		return;
+	}
+
+	auto const & script = scripts[scripts.size() - 1];
+	auto const initMethod = script.getInit();
+	// std::cout << "Entry init: " <<  << std::endl;
+	for (auto const & body : abc.getBodies()) {
+		if (body.getMethod() == initMethod) {
+			std::cout << "Entry size: " << body.getCode().size() << std::endl;
+			printBytes(body.getCode());
+		}
+	}
+}
+
 int main(int argc, char * argv[])
 {
 	std::vector<std::string> arguments(argv, argv+argc);
@@ -22,7 +57,6 @@ int main(int argc, char * argv[])
 	}
 
 	ByteBuffer buffer(loadFile(arguments[1]));
-	std::cout << buffer.bytesLeft() << std::endl;
 
 	auto abc = vm::loadAbc(buffer);
 
@@ -45,7 +79,9 @@ int main(int argc, char * argv[])
 	std::cout << abc.getScripts().size() << " scripts" << std::endl;
 	std::cout << abc.getBodies().size() << " bodies" << std::endl;
 
-	std::cout << buffer.bytesLeft() << std::endl;
+	std::cout << buffer.bytesLeft() << " bytes left" << std::endl;
+
+	printEntry(abc);
 
 	return 0;
 }
