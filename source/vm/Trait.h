@@ -57,7 +57,7 @@ struct TraitInfo
 {
 	uint32_t name;
 	TraitKind kind;
-	TraitAttributes attributes;
+	uint8_t attributes;
 
 	union
 	{

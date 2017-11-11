@@ -17,7 +17,7 @@ enum class MultinameKind: uint8_t
 	MultinameA		= 0x0E, // 14
 	MultinameL		= 0x1B, // 27
 	MultinameLA		= 0x1C, // 28
-	Typename		= 0x1D
+	Typename		= 0x1D	// 29
 };
 
 struct QName

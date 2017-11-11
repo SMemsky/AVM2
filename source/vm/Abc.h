@@ -51,8 +51,17 @@ enum class MethodFlags: uint8_t
 	HasParamNames	= 0x80
 };
 
+enum class InstanceFlags: uint8_t
+{
+	Sealed				= 0x01,
+	Final				= 0x02,
+	Interface			= 0x04,
+	ProtectedNamespace	= 0x08
+};
+
 using Namespace = std::pair<NamespaceKind, uint32_t>;
 using Option = std::pair<uint32_t, OptionKind>;
+using MetadataItem = std::pair<uint32_t, uint32_t>;
 
 class AbcConstantPool
 {
@@ -103,7 +112,12 @@ class MetadataInfo
 	friend MetadataInfo loadMetadataInfo(ByteBuffer &);
 public:
 	MetadataInfo() = default;
+
+	uint32_t getName() const { return name; };
+	std::vector<MetadataItem> const & getItems() const { return items; };
 private:
+	uint32_t name;
+	std::vector<MetadataItem> items;
 };
 
 class InstanceInfo

@@ -93,8 +93,10 @@ AbcConstantPool loadConstantPool(ByteBuffer & buffer)
 	unsigned const namespaceCount = buffer.readUint30();
 	pool.namespaces.push_back(defaultNamespaceConstant);
 	for (unsigned i = 1; i < namespaceCount; ++i) {
+		uint8_t type = buffer.readUint8();
+		uint32_t name = buffer.readUint30();
 		pool.namespaces.push_back(
-			Namespace(NamespaceKind(buffer.readUint8()), buffer.readUint30()));
+			Namespace(NamespaceKind(type), name));
 	}
 
 	unsigned const nsSetCount = buffer.readUint30();
@@ -130,8 +132,10 @@ MethodInfo loadMethodInfo(ByteBuffer & buffer)
 	if (method.flags & uint8_t(MethodFlags::HasOptional)) {
 		unsigned const optionCount = buffer.readUint30();
 		for (unsigned i = 0; i < optionCount; ++i) {
+			uint32_t tmp = buffer.readUint30();
+			uint8_t kind = buffer.readUint8();
 			method.options.push_back(
-				Option(buffer.readUint30(), OptionKind(buffer.readUint8())));
+				Option(tmp, OptionKind(kind)));
 		}
 	}
 
@@ -144,11 +148,16 @@ MethodInfo loadMethodInfo(ByteBuffer & buffer)
 	return method;
 }
 
-MetadataInfo loadMetadataInfo(ByteBuffer &)
+MetadataInfo loadMetadataInfo(ByteBuffer & buffer)
 {
 	MetadataInfo metadata = MetadataInfo();
-
-	throw std::runtime_error("loadMetadataInfo: not implemented");
+	metadata.name = buffer.readUint30();
+	unsigned const itemCount = buffer.readUint30();
+	for (unsigned i = 0; i < itemCount; ++i) {
+		uint32_t key = buffer.readUint30();
+		uint32_t value = buffer.readUint30();
+		metadata.items.push_back(MetadataItem(key, value));
+	}
 
 	return metadata;
 }
@@ -160,7 +169,7 @@ TraitInfo loadTraitInfo(ByteBuffer & buffer)
 	trait.name = buffer.readUint30();
 	uint8_t kind = buffer.readUint8();
 	trait.kind = TraitKind(kind & 0xf);
-	trait.attributes = TraitAttributes(kind >> 4);
+	trait.attributes = kind >> 4;
 	switch (trait.kind) {
 	case TraitKind::Slot:
 	case TraitKind::Const:
@@ -184,11 +193,19 @@ TraitInfo loadTraitInfo(ByteBuffer & buffer)
 	case TraitKind::Setter:
 		trait.methodTrait.dispId = buffer.readUint30();
 		trait.methodTrait.method = buffer.readUint30();
+
 		break;
 	default:
 		throw std::runtime_error(
 			std::string("Unknown trait kind: ")
 			+ std::to_string(uint8_t(trait.kind)));
+	}
+
+	if (trait.attributes & uint8_t(TraitAttributes::Metadata)) {
+		unsigned const metadataCount = buffer.readUint30();
+		for (unsigned i = 0; i < metadataCount; ++i) {
+			trait.metadata.push_back(buffer.readUint30());
+		}
 	}
 
 	return trait;
@@ -200,7 +217,9 @@ InstanceInfo loadInstanceInfo(ByteBuffer & buffer)
 	instance.name = buffer.readUint30();
 	instance.superName = buffer.readUint30();
 	instance.flags = buffer.readUint8();
-	instance.protectedNamespace = buffer.readUint30();
+	if (instance.flags & uint8_t(InstanceFlags::ProtectedNamespace)) {
+		instance.protectedNamespace = buffer.readUint30();	
+	}
 	unsigned const interfaceCount = buffer.readUint30();
 	for (unsigned i = 0; i < interfaceCount; ++i) {
 		instance.interfaces.push_back(buffer.readUint30());
