@@ -59,9 +59,9 @@ enum class InstanceFlags: uint8_t
 	ProtectedNamespace	= 0x08
 };
 
-using Namespace = std::pair<NamespaceKind, uint32_t>;
-using Option = std::pair<uint32_t, OptionKind>;
-using MetadataItem = std::pair<uint32_t, uint32_t>;
+using Namespace = std::pair<NamespaceKind, uint32_t>; // _, -> strings
+using Option = std::pair<uint32_t, OptionKind>; // -> (depends ob kind)
+using MetadataItem = std::pair<uint32_t, uint32_t>; // -> strings, -> strings
 
 class AbcConstantPool
 {
@@ -82,7 +82,7 @@ private:
 	std::vector<double> doubles;
 	std::vector<std::string> strings;
 	std::vector<Namespace> namespaces;
-	std::vector<std::vector<uint32_t>> nsSets;
+	std::vector<std::vector<uint32_t>> nsSets; // -> namespaces
 	std::vector<MultinameInfo> multinames;
 };
 
@@ -99,12 +99,12 @@ public:
 	std::vector<Option> const & getOptions() const { return options; };
 	std::vector<uint32_t> const & getParamNames() const { return paramNames; };
 private:
-	std::vector<uint32_t> params;
-	uint32_t returnType;
-	uint32_t name;
+	std::vector<uint32_t> params; // -> multiname
+	uint32_t returnType; // -> multiname
+	uint32_t name; // strings
 	uint8_t flags;
 	std::vector<Option> options;
-	std::vector<uint32_t> paramNames;
+	std::vector<uint32_t> paramNames; // -> strings
 };
 
 class MetadataInfo
@@ -116,7 +116,7 @@ public:
 	uint32_t getName() const { return name; };
 	std::vector<MetadataItem> const & getItems() const { return items; };
 private:
-	uint32_t name;
+	uint32_t name; // -> strings
 	std::vector<MetadataItem> items;
 };
 
@@ -134,12 +134,12 @@ public:
 	uint32_t getConstructor() const { return constructor; };
 	std::vector<TraitInfo> const & getTraits() const { return traits; };
 private:
-	uint32_t name;
-	uint32_t superName;
+	uint32_t name; // -> multiname
+	uint32_t superName; // -> multiname
 	uint8_t flags;
 	uint32_t protectedNamespace;
-	std::vector<uint32_t> interfaces;
-	uint32_t constructor;
+	std::vector<uint32_t> interfaces; // -> multiname
+	uint32_t constructor; // -> method
 	std::vector<TraitInfo> traits;
 };
 
@@ -152,7 +152,7 @@ public:
 	uint32_t getCInit() const { return cInit; };
 	std::vector<TraitInfo> const & getTraits() const { return traits; };
 private:
-	uint32_t cInit;
+	uint32_t cInit; // -> method
 	std::vector<TraitInfo> traits;
 };
 
@@ -165,7 +165,7 @@ public:
 	uint32_t getInit() const { return init; };
 	std::vector<TraitInfo> const & getTraits() const { return traits; };
 private:
-	uint32_t init;
+	uint32_t init; // -> method
 	std::vector<TraitInfo> traits;
 };
 
@@ -203,7 +203,7 @@ public:
 	std::vector<ExceptionInfo> const & getExceptions() const { return exceptions; };
 	std::vector<TraitInfo> const & getTraits() const { return traits; };
 private:
-	uint32_t method;
+	uint32_t method; // -> methods
 	uint32_t maxStack;
 	uint32_t localCount;
 	uint32_t initScopeDepth;

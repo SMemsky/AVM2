@@ -1,7 +1,9 @@
 #include "Dump.h"
 
 #include <algorithm>
+#include <cassert>
 #include <iostream>
+#include <unordered_map>
 
 namespace
 {
@@ -20,6 +22,30 @@ void dumpVector(std::vector<T> const & vector, std::string const & name)
 
 namespace dump
 {
+
+void dumpClasses(vm::Abc const & abc)
+{
+	std::unordered_map<std::string, std::vector<unsigned>> classes;
+
+	auto const & cp = abc.getConstantPool();
+	auto const & strings = cp.getStrings();
+	auto const & namespaces = cp.getNamespaces();
+	auto const & multinames = cp.getMultinames();
+	auto const & instances = abc.getInstances();
+
+	unsigned const instanceCount = instances.size();
+	for (unsigned i = 0; i < instanceCount; ++i) {
+		auto const & instance = instances[i];
+		assert(multinames[instance.getName()].kind == vm::MultinameKind::QName);
+		classes[strings[namespaces[multinames[instance.getName()].qName.ns].second]].push_back(i);
+	}
+
+	for (auto const & n : classes) {
+		for (auto c : n.second) {
+			std::cout << n.first << " " << strings[multinames[instances[c].getName()].qName.name] << std::endl;
+		}
+	}
+}
 
 void dumpConstantPool(vm::AbcConstantPool const & pool)
 {

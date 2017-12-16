@@ -22,13 +22,13 @@ enum class MultinameKind: uint8_t
 
 struct QName
 {
-	uint32_t ns;
-	uint32_t name;
+	uint32_t ns; // namespaces
+	uint32_t name; // strings
 };
 
 struct RTQName
 {
-	uint32_t name;
+	uint32_t name; // strings
 };
 
 struct RTQNameL
@@ -38,18 +38,18 @@ struct RTQNameL
 
 struct Multiname
 {
-	uint32_t name;
-	uint32_t nsSet;
+	uint32_t name; // strings
+	uint32_t nsSet; // ns-sets
 };
 
 struct MultinameL
 {
-	uint32_t nsSet;
+	uint32_t nsSet; // ns-sets
 };
 
 struct Typename
 {
-	uint32_t qName;
+	uint32_t qName; // always a qName-type multiname
 };
 
 struct MultinameInfo
